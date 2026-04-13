@@ -1,0 +1,1444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Capsule Wardrobe</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0a0a0a;
+    color: #e0e0e0;
+    min-height: 100vh;
+    padding: 40px 20px;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 2rem;
+    font-weight: 300;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    color: #fff;
+  }
+
+  .subtitle {
+    text-align: center;
+    font-size: 0.85rem;
+    color: #666;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 60px;
+  }
+
+  .category {
+    max-width: 1100px;
+    margin: 0 auto 50px;
+    position: relative;
+  }
+
+  .category-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    padding: 0 4px;
+  }
+
+  .category-title {
+    font-size: 0.75rem;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: #888;
+    font-weight: 500;
+  }
+
+  .category-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .btn {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    color: #aaa;
+    padding: 6px 14px;
+    font-size: 0.7rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+
+  .btn:hover { border-color: #666; color: #fff; }
+
+  .items-track {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 12px;
+    scrollbar-width: thin;
+    scrollbar-color: #333 transparent;
+  }
+
+  .items-track::-webkit-scrollbar { height: 4px; }
+  .items-track::-webkit-scrollbar-track { background: transparent; }
+  .items-track::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+
+  .item-card {
+    flex: 0 0 240px;
+    scroll-snap-align: start;
+    background: #141414;
+    border: 1px solid #222;
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+    transition: border-color 0.2s;
+    cursor: default;
+  }
+
+  .item-card:hover { border-color: #444; }
+  .item-card.selected { border-color: #fff; }
+
+  .item-card.selected::after {
+    content: '✓';
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #fff;
+    color: #000;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+    z-index: 2;
+  }
+
+  .item-card.selected.owned::after {
+    top: 38px;
+  }
+
+  .owned-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #1a6b3c;
+    color: #4ade80;
+    padding: 3px 10px;
+    font-size: 0.55rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    border-radius: 3px;
+    z-index: 3;
+    cursor: pointer;
+  }
+
+  .owned-badge:hover {
+    background: #15803d;
+  }
+
+  .wishlist-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #1a1a4b;
+    color: #818cf8;
+    padding: 3px 10px;
+    font-size: 0.55rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    border-radius: 3px;
+    z-index: 3;
+    cursor: pointer;
+  }
+
+  .wishlist-badge:hover {
+    background: #2a2a6b;
+  }
+
+  .qty-control {
+    position: absolute;
+    top: 10px;
+    left: 36px;
+    display: none;
+    align-items: center;
+    gap: 4px;
+    z-index: 3;
+  }
+
+  .item-card:hover .qty-control { display: flex; }
+
+  .qty-control button {
+    background: rgba(0,0,0,0.7);
+    border: none;
+    color: #aaa;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .qty-control button:hover { color: #fff; }
+
+  .qty-badge {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    background: rgba(0,0,0,0.7);
+    color: #aaa;
+    padding: 2px 8px;
+    font-size: 0.6rem;
+    letter-spacing: 1px;
+    border-radius: 3px;
+    z-index: 3;
+  }
+
+  .ordered-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #4a3a1a;
+    color: #fbbf24;
+    padding: 3px 10px;
+    font-size: 0.55rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    border-radius: 3px;
+    z-index: 3;
+    cursor: pointer;
+  }
+
+  .ordered-badge:hover {
+    background: #5a4a2a;
+  }
+
+  .item-image {
+    width: 100%;
+    height: 260px;
+    background: #1a1a1a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+  }
+
+  .item-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .item-image.empty {
+    border-bottom: 1px solid #222;
+  }
+
+  .item-image.empty::after {
+    content: 'Drop image or click';
+    color: #444;
+    font-size: 0.7rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .item-image.dragover {
+    background: #1f1f1f;
+    border: 2px dashed #555;
+  }
+
+  .item-image.dragover::after {
+    content: 'Drop here';
+    color: #888;
+  }
+
+  .item-info {
+    padding: 14px;
+  }
+
+  .item-brand {
+    font-size: 0.65rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #666;
+    margin-bottom: 4px;
+  }
+
+  .item-name {
+    font-size: 0.9rem;
+    font-weight: 400;
+    color: #ddd;
+    margin-bottom: 6px;
+  }
+
+  .item-price {
+    font-size: 0.8rem;
+    color: #888;
+    margin-bottom: 8px;
+  }
+
+  .item-link {
+    display: inline-block;
+    font-size: 0.65rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #555;
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .item-link:hover { color: #fff; }
+
+  .item-delete {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: rgba(0,0,0,0.7);
+    border: none;
+    color: #666;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 14px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+  }
+
+  .item-card:hover .item-delete { display: flex; }
+  .item-delete:hover { color: #ff4444; }
+
+  .item-info-btn {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    background: rgba(0,0,0,0.7);
+    border: 1px solid #444;
+    color: #888;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 12px;
+    font-style: italic;
+    font-family: Georgia, serif;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+  }
+
+  .item-card:hover .item-info-btn { display: flex; }
+  .item-info-btn:hover { color: #fff; border-color: #888; }
+
+  .add-card {
+    flex: 0 0 240px;
+    height: 370px;
+    background: transparent;
+    border: 1px dashed #2a2a2a;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    scroll-snap-align: start;
+  }
+
+  .add-card:hover { border-color: #555; background: #111; }
+
+  .add-card span {
+    font-size: 0.7rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #444;
+  }
+
+  .add-category {
+    max-width: 1100px;
+    margin: 20px auto 60px;
+    text-align: center;
+  }
+
+  .add-category .btn {
+    padding: 10px 24px;
+    font-size: 0.7rem;
+  }
+
+  /* Outfit Preview */
+  .outfit-section {
+    max-width: 1100px;
+    margin: 0 auto 60px;
+    border-top: 1px solid #222;
+    padding-top: 40px;
+  }
+
+  .outfit-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+
+  .outfit-title {
+    font-size: 0.75rem;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: #888;
+  }
+
+  .outfit-grid {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .outfit-slot {
+    width: 180px;
+    text-align: center;
+  }
+
+  .outfit-slot-image {
+    width: 180px;
+    height: 200px;
+    background: #141414;
+    border: 1px solid #222;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .outfit-slot-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .outfit-slot-label {
+    font-size: 0.6rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #555;
+  }
+
+  .outfit-slot-name {
+    font-size: 0.75rem;
+    color: #aaa;
+    margin-top: 2px;
+  }
+
+  .outfit-total {
+    text-align: center;
+    margin-top: 24px;
+    font-size: 0.8rem;
+    color: #666;
+    letter-spacing: 2px;
+  }
+
+  /* Modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-overlay.active { display: flex; }
+
+  .modal {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 6px;
+    padding: 30px;
+    width: 380px;
+    max-width: 90vw;
+  }
+
+  .modal h3 {
+    font-size: 0.75rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #888;
+    margin-bottom: 20px;
+    font-weight: 400;
+  }
+
+  .modal input, .modal textarea {
+    width: 100%;
+    background: #111;
+    border: 1px solid #333;
+    color: #ddd;
+    padding: 10px 12px;
+    font-size: 0.85rem;
+    font-family: inherit;
+    margin-bottom: 12px;
+    border-radius: 3px;
+    outline: none;
+  }
+
+  .modal input:focus, .modal textarea:focus { border-color: #666; }
+
+  .modal textarea { resize: vertical; min-height: 60px; }
+
+  .modal-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 8px;
+  }
+
+  .btn-primary {
+    background: #fff;
+    color: #000;
+    border-color: #fff;
+  }
+
+  .btn-primary:hover { background: #ddd; border-color: #ddd; color: #000; }
+
+  /* Detail Sidebar */
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 50;
+  }
+
+  .sidebar-overlay.active { display: block; }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    right: -480px;
+    width: 480px;
+    max-width: 90vw;
+    height: 100vh;
+    background: #111;
+    border-left: 1px solid #222;
+    z-index: 51;
+    overflow-y: auto;
+    transition: right 0.3s ease;
+    padding: 0;
+  }
+
+  .sidebar.active { right: 0; }
+
+  .sidebar-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: none;
+    border: none;
+    color: #666;
+    font-size: 20px;
+    cursor: pointer;
+    z-index: 2;
+  }
+
+  .sidebar-close:hover { color: #fff; }
+
+  .sidebar-image {
+    width: 100%;
+    height: 320px;
+    background: #1a1a1a;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .sidebar-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .sidebar-body {
+    padding: 24px;
+  }
+
+  .sidebar-brand {
+    font-size: 0.65rem;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: #666;
+    margin-bottom: 4px;
+  }
+
+  .sidebar-name {
+    font-size: 1.2rem;
+    color: #fff;
+    margin-bottom: 6px;
+    font-weight: 400;
+  }
+
+  .sidebar-price {
+    font-size: 1rem;
+    color: #888;
+    margin-bottom: 16px;
+  }
+
+  .sidebar-section {
+    margin-bottom: 20px;
+  }
+
+  .sidebar-section-title {
+    font-size: 0.6rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #555;
+    margin-bottom: 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #222;
+  }
+
+  .sidebar-section p, .sidebar-section li {
+    font-size: 0.8rem;
+    color: #999;
+    line-height: 1.6;
+    margin-bottom: 4px;
+  }
+
+  .sidebar-section ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .sidebar-section ul li::before {
+    content: '·';
+    color: #444;
+    margin-right: 8px;
+  }
+
+  .sidebar-link {
+    display: inline-block;
+    font-size: 0.7rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #555;
+    text-decoration: none;
+    margin-bottom: 16px;
+    transition: color 0.2s;
+  }
+
+  .sidebar-link:hover { color: #fff; }
+
+  .comment-input-wrap {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .comment-input-wrap input {
+    flex: 1;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    color: #ddd;
+    padding: 8px 10px;
+    font-size: 0.8rem;
+    font-family: inherit;
+    border-radius: 3px;
+    outline: none;
+  }
+
+  .comment-input-wrap input:focus { border-color: #666; }
+
+  .comment-input-wrap button {
+    background: #222;
+    border: 1px solid #333;
+    color: #aaa;
+    padding: 8px 14px;
+    font-size: 0.7rem;
+    cursor: pointer;
+    border-radius: 3px;
+    font-family: inherit;
+  }
+
+  .comment-input-wrap button:hover { border-color: #666; color: #fff; }
+
+  .comment-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 6px 0;
+    border-bottom: 1px solid #1a1a1a;
+  }
+
+  .comment-text {
+    font-size: 0.8rem;
+    color: #bbb;
+  }
+
+  .comment-date {
+    font-size: 0.6rem;
+    color: #444;
+    white-space: nowrap;
+    margin-left: 12px;
+  }
+
+  .comment-delete {
+    background: none;
+    border: none;
+    color: #444;
+    cursor: pointer;
+    font-size: 12px;
+    margin-left: 8px;
+  }
+
+  .comment-delete:hover { color: #ff4444; }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .item-card { flex: 0 0 200px; }
+    .item-image { height: 220px; }
+    h1 { font-size: 1.4rem; }
+    .outfit-slot { width: 140px; }
+    .outfit-slot-image { width: 140px; height: 160px; }
+    .sidebar { width: 100vw; max-width: 100vw; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Capsule</h1>
+<p class="subtitle">The Uniform</p>
+
+<div id="categories"></div>
+
+<div class="add-category">
+  <button class="btn" onclick="addCategory()">+ Add Category</button>
+</div>
+
+<div class="outfit-section">
+  <div class="outfit-header">
+    <span class="outfit-title">Today's Outfit</span>
+    <span class="outfit-total" id="outfit-total"></span>
+  </div>
+  <div class="outfit-grid" id="outfit-grid"></div>
+</div>
+
+<!-- Item Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h3 id="modal-title">Add Item</h3>
+    <input type="text" id="input-brand" placeholder="Brand (e.g. Sunspel)">
+    <input type="text" id="input-name" placeholder="Item name (e.g. Classic Crew Neck)">
+    <input type="text" id="input-price" placeholder="Price (e.g. 75)">
+    <input type="text" id="input-link" placeholder="Link (URL)">
+    <input type="text" id="input-image" placeholder="Image URL (or drop image after)">
+    <textarea id="input-notes" placeholder="Notes (colour, size, etc.)"></textarea>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveItem()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Detail Sidebar -->
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+<div class="sidebar" id="sidebar">
+  <button class="sidebar-close" onclick="closeSidebar()">&times;</button>
+  <div id="sidebar-content"></div>
+</div>
+
+<!-- Category Name Modal -->
+<div class="modal-overlay" id="cat-modal">
+  <div class="modal">
+    <h3>Category Name</h3>
+    <input type="text" id="input-cat-name" placeholder="e.g. Base Layer, Shoes, Layers">
+    <div class="modal-actions">
+      <button class="btn" onclick="closeCatModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCategoryName()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'capsule-wardrobe';
+const STORAGE_VERSION = 9;
+
+const defaultData = {
+  categories: [
+    {
+      id: 'base',
+      name: 'Base',
+      items: [
+        { id: 'i1', brand: 'Sunspel', name: 'Riviera Crew Neck (Charcoal Melange)', price: 85, link: 'https://www.mrporter.com/en-gb/mens/product/sunspel/clothing/plain-t-shirts/riviera-organic-cotton-jersey-t-shirt/27086482323590791', image: 'https://www.mrporter.com/variants/images/27086482323590791/in/w960_q60.jpg', notes: 'Mr Porter #1104ZR6482621J. M+L to test fit. Target 5. Wash 30°, dry flat.', selected: true, status: 'ordered', qty: 2, targetQty: 5 },
+        { id: 'i2', brand: 'Sunspel', name: 'Riviera Crew Neck (White)', price: 85, link: 'https://www.mrporter.com/en-gb/mens/product/sunspel/clothing/plain-t-shirts/riviera-organic-cotton-jersey-t-shirt/27086482323590791', image: 'https://www.mrporter.com/variants/images/10375442618770807/in/w960_q80.jpg', notes: 'Mr Porter #1104ZR6482621J. M+L to test fit. Target 3.', selected: false, status: 'ordered', qty: 2, targetQty: 3 },
+      ]
+    },
+    {
+      id: 'jeans',
+      name: 'Jeans',
+      items: [
+        { id: 'i3', brand: 'Citizens of Humanity', name: 'Gage Cashmere Denim (Prospect)', price: 330, link: 'https://citizensofhumanity.com/products/gage-classic-straight-cashmere-denim-prospect', image: 'https://citizensofhumanity.com/cdn/shop/files/6180-1617_GAGE_PROSPECT_7348ff7a-3b51-4dbc-a416-d31b08dcdbbb.jpg?v=1728071702', notes: 'ORDERED. Size 34, 32.5" inseam. 93% Cotton, 5.5% Cashmere, 1.5% Elastane. Rise: 10.25". Made in USA.', selected: true, status: 'ordered' },
+        { id: 'i4', brand: 'Citizens of Humanity', name: 'Gage (Mid Blue / Light Wash)', price: 330, link: '', image: '', notes: 'Second pair. Casual/daily. Same size 34.', selected: false, status: 'wishlist' },
+      ]
+    },
+    {
+      id: 'shoes',
+      name: 'Shoes',
+      items: [
+        { id: 'i5', brand: 'Common Projects', name: 'Original Achilles Low (White)', price: 350, link: '', image: '', notes: 'Daily default', selected: true },
+        { id: 'i6', brand: 'Louis Vuitton', name: 'Major Loafer (Black)', price: 750, link: '', image: '', notes: 'Meetings, London, conferences', selected: false },
+        { id: 'i7', brand: 'Grenson', name: 'Sneaker 1 (Black Leather)', price: 235, link: '', image: '', notes: 'Travel days, hybrid', selected: false },
+      ]
+    },
+    {
+      id: 'layers',
+      name: 'Layers',
+      items: [
+        { id: 'i8', brand: 'John Smedley', name: 'Tapton 1/4 Zip (Midnight)', price: 290, link: 'https://www.johnsmedley.com/uk/tapton-midnight', image: 'https://www.datocms-assets.com/170444/1775648034-109_5bd1c8fec7-taptomid-1-original.jpg', notes: 'Size L. Fine gauge merino wool. Made in Derbyshire.', selected: true, status: 'ordered', qty: 1, targetQty: 1 },
+        { id: 'i9', brand: 'Reiss', name: 'Blackhall 1/4 Zip (Charcoal)', price: 98, link: '', image: '', notes: '', selected: false },
+        { id: 'i10', brand: 'Reiss', name: 'Blackhall 1/4 Zip (Black)', price: 98, link: '', image: '', notes: '', selected: false },
+        { id: 'i11', brand: 'COS', name: 'Wool Overshirt (Charcoal)', price: 115, link: '', image: '', notes: 'Casual jacket replacement', selected: false },
+        { id: 'i12', brand: 'AllSaints', name: 'Survey Leather Overshirt', price: 350, link: '', image: '', notes: 'Edge piece', selected: false },
+      ]
+    },
+    {
+      id: 'jacket',
+      name: 'Jacket / Coat',
+      items: [
+        { id: 'i13', brand: 'AMI Paris', name: 'Unstructured Blazer', price: 400, link: '', image: '', notes: 'French cut, relaxed shoulders', selected: true },
+        { id: 'i14', brand: 'Reiss', name: 'Raven Overcoat (Navy)', price: 350, link: '', image: '', notes: 'Winter / smart days', selected: false },
+        { id: 'i15', brand: 'AllSaints', name: 'Tycho Blazer', price: 250, link: '', image: '', notes: 'Creative director energy', selected: false },
+      ]
+    }
+  ]
+};
+
+let data;
+
+function load() {
+  const savedVersion = parseInt(localStorage.getItem(STORAGE_KEY + '-version') || '0');
+  if (savedVersion < STORAGE_VERSION) {
+    data = JSON.parse(JSON.stringify(defaultData));
+    localStorage.setItem(STORAGE_KEY + '-version', STORAGE_VERSION);
+    save();
+  } else {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    data = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(defaultData));
+  }
+}
+
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+function uid() {
+  return 'i' + Date.now() + Math.random().toString(36).slice(2, 6);
+}
+
+// Render
+function render() {
+  const container = document.getElementById('categories');
+  container.innerHTML = '';
+
+  data.categories.forEach((cat, catIdx) => {
+    const div = document.createElement('div');
+    div.className = 'category';
+    div.innerHTML = `
+      <div class="category-header">
+        <span class="category-title">${cat.name}</span>
+        <div class="category-actions">
+          <button class="btn" onclick="renameCategory(${catIdx})">Rename</button>
+          <button class="btn" onclick="deleteCategory(${catIdx})">Remove</button>
+        </div>
+      </div>
+      <div class="items-track" id="track-${catIdx}">
+        ${cat.items.map((item, itemIdx) => renderCard(item, catIdx, itemIdx)).join('')}
+        <div class="add-card" onclick="openModal(${catIdx})"><span>+ Add</span></div>
+      </div>
+    `;
+    container.appendChild(div);
+
+    // Set up drag and drop on image areas
+    setTimeout(() => {
+      cat.items.forEach((item, itemIdx) => {
+        const imgEl = document.getElementById(`img-${catIdx}-${itemIdx}`);
+        if (imgEl) setupDrop(imgEl, catIdx, itemIdx);
+      });
+    }, 0);
+  });
+
+  renderOutfit();
+}
+
+function renderCard(item, catIdx, itemIdx) {
+  const hasImage = item.image && item.image.length > 0;
+  const status = item.status || 'wishlist';
+  const badgeClass = status === 'owned' ? 'owned-badge' : status === 'ordered' ? 'ordered-badge' : 'wishlist-badge';
+  const badgeLabel = status === 'owned' ? 'Owned' : status === 'ordered' ? 'Ordered' : 'Wishlist';
+  const qty = item.qty || 0;
+  const targetQty = item.targetQty || 0;
+  const showQty = status === 'owned' || status === 'ordered';
+  return `
+    <div class="item-card ${item.selected ? 'selected' : ''} ${status}" onclick="toggleSelect(${catIdx}, ${itemIdx})">
+      <button class="item-delete" onclick="event.stopPropagation(); deleteItem(${catIdx}, ${itemIdx})">&times;</button>
+      <button class="item-info-btn" onclick="event.stopPropagation(); openSidebar(${catIdx}, ${itemIdx})">i</button>
+      <span class="${badgeClass}" onclick="event.stopPropagation(); cycleStatus(${catIdx}, ${itemIdx})">${badgeLabel}</span>
+      ${showQty ? `<div class="qty-control">
+        <button onclick="event.stopPropagation(); changeQty(${catIdx}, ${itemIdx}, -1)">-</button>
+        <button onclick="event.stopPropagation(); changeQty(${catIdx}, ${itemIdx}, 1)">+</button>
+      </div>` : ''}
+      <div class="item-image ${hasImage ? '' : 'empty'}" id="img-${catIdx}-${itemIdx}">
+        ${hasImage ? `<img src="${item.image}" alt="${item.name}">` : ''}
+        ${showQty && qty > 0 ? `<span class="qty-badge">${qty}${targetQty ? ' / ' + targetQty : ''}</span>` : ''}
+      </div>
+      <div class="item-info">
+        <div class="item-brand">${item.brand}</div>
+        <div class="item-name">${item.name}</div>
+        <div class="item-price">${item.price ? '£' + item.price : ''}</div>
+        ${item.link ? `<a class="item-link" href="${item.link}" target="_blank" onclick="event.stopPropagation()">View &rarr;</a>` : ''}
+        ${item.notes ? `<div style="font-size:0.7rem;color:#555;margin-top:4px">${item.notes}</div>` : ''}
+      </div>
+    </div>
+  `;
+}
+
+function cycleStatus(catIdx, itemIdx) {
+  const item = data.categories[catIdx].items[itemIdx];
+  const cycle = ['wishlist', 'ordered', 'owned'];
+  const current = item.status || 'wishlist';
+  const next = cycle[(cycle.indexOf(current) + 1) % cycle.length];
+  item.status = next;
+  if (next === 'owned' && !item.qty) item.qty = 1;
+  save();
+  render();
+}
+
+function changeQty(catIdx, itemIdx, delta) {
+  const item = data.categories[catIdx].items[itemIdx];
+  item.qty = Math.max(0, (item.qty || 0) + delta);
+  save();
+  render();
+}
+
+function renderOutfit() {
+  const grid = document.getElementById('outfit-grid');
+  const totalEl = document.getElementById('outfit-total');
+  let total = 0;
+  let html = '';
+
+  data.categories.forEach(cat => {
+    const selected = cat.items.find(i => i.selected);
+    if (selected) {
+      total += selected.price || 0;
+      html += `
+        <div class="outfit-slot">
+          <div class="outfit-slot-image">
+            ${selected.image ? `<img src="${selected.image}" alt="${selected.name}">` : ''}
+          </div>
+          <div class="outfit-slot-label">${cat.name}</div>
+          <div class="outfit-slot-name">${selected.brand} ${selected.name}</div>
+        </div>
+      `;
+    }
+  });
+
+  grid.innerHTML = html;
+  totalEl.textContent = total > 0 ? `Total: £${total.toLocaleString()}` : '';
+}
+
+// Selection
+function toggleSelect(catIdx, itemIdx) {
+  data.categories[catIdx].items.forEach((item, idx) => {
+    item.selected = idx === itemIdx;
+  });
+  save();
+  render();
+}
+
+// Drag & Drop
+function setupDrop(el, catIdx, itemIdx) {
+  el.addEventListener('dragover', e => {
+    e.preventDefault();
+    el.classList.add('dragover');
+  });
+  el.addEventListener('dragleave', () => el.classList.remove('dragover'));
+  el.addEventListener('drop', e => {
+    e.preventDefault();
+    el.classList.remove('dragover');
+
+    const url = e.dataTransfer.getData('text/uri-list') || e.dataTransfer.getData('text/plain');
+    if (url && (url.startsWith('http') || url.startsWith('data:'))) {
+      data.categories[catIdx].items[itemIdx].image = url;
+      save();
+      render();
+      return;
+    }
+
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = ev => {
+        data.categories[catIdx].items[itemIdx].image = ev.target.result;
+        save();
+        render();
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  // Click to upload (only on empty images, single click only)
+  el.addEventListener('click', e => {
+    if (e.target.closest('.item-delete')) return;
+    if (e.detail > 1) return; // ignore double-clicks
+    // Only trigger file upload if image is empty
+    const item = data.categories[catIdx].items[itemIdx];
+    if (item.image && item.image.length > 0) return;
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = () => {
+      const file = input.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = ev => {
+          data.categories[catIdx].items[itemIdx].image = ev.target.result;
+          save();
+          render();
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+    input.click();
+  });
+}
+
+// Modal
+let currentCatIdx = -1;
+let editingItemIdx = -1;
+
+function openModal(catIdx, itemIdx) {
+  currentCatIdx = catIdx;
+  editingItemIdx = itemIdx !== undefined ? itemIdx : -1;
+  const modal = document.getElementById('modal');
+  modal.classList.add('active');
+
+  if (editingItemIdx >= 0) {
+    const item = data.categories[catIdx].items[editingItemIdx];
+    document.getElementById('modal-title').textContent = 'Edit Item';
+    document.getElementById('input-brand').value = item.brand || '';
+    document.getElementById('input-name').value = item.name || '';
+    document.getElementById('input-price').value = item.price || '';
+    document.getElementById('input-link').value = item.link || '';
+    document.getElementById('input-image').value = item.image && !item.image.startsWith('data:') ? item.image : '';
+    document.getElementById('input-notes').value = item.notes || '';
+  } else {
+    document.getElementById('modal-title').textContent = 'Add Item';
+    document.getElementById('input-brand').value = '';
+    document.getElementById('input-name').value = '';
+    document.getElementById('input-price').value = '';
+    document.getElementById('input-link').value = '';
+    document.getElementById('input-image').value = '';
+    document.getElementById('input-notes').value = '';
+  }
+
+  setTimeout(() => document.getElementById('input-brand').focus(), 100);
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('active');
+}
+
+function saveItem() {
+  const brand = document.getElementById('input-brand').value.trim();
+  const name = document.getElementById('input-name').value.trim();
+  const price = parseInt(document.getElementById('input-price').value) || 0;
+  const link = document.getElementById('input-link').value.trim();
+  const image = document.getElementById('input-image').value.trim();
+  const notes = document.getElementById('input-notes').value.trim();
+
+  if (!brand && !name) return;
+
+  if (editingItemIdx >= 0) {
+    const item = data.categories[currentCatIdx].items[editingItemIdx];
+    item.brand = brand;
+    item.name = name;
+    item.price = price;
+    item.link = link;
+    if (image) item.image = image;
+    item.notes = notes;
+  } else {
+    data.categories[currentCatIdx].items.push({
+      id: uid(),
+      brand,
+      name,
+      price,
+      link,
+      image,
+      notes,
+      selected: false
+    });
+  }
+
+  save();
+  closeModal();
+  render();
+}
+
+function deleteItem(catIdx, itemIdx) {
+  data.categories[catIdx].items.splice(itemIdx, 1);
+  save();
+  render();
+}
+
+// Category management
+function addCategory() {
+  document.getElementById('cat-modal').classList.add('active');
+  document.getElementById('input-cat-name').value = '';
+  setTimeout(() => document.getElementById('input-cat-name').focus(), 100);
+}
+
+function closeCatModal() {
+  document.getElementById('cat-modal').classList.remove('active');
+}
+
+function saveCategoryName() {
+  const name = document.getElementById('input-cat-name').value.trim();
+  if (!name) return;
+  data.categories.push({ id: 'cat-' + uid(), name, items: [] });
+  save();
+  closeCatModal();
+  render();
+}
+
+function renameCategory(catIdx) {
+  const name = prompt('Category name:', data.categories[catIdx].name);
+  if (name && name.trim()) {
+    data.categories[catIdx].name = name.trim();
+    save();
+    render();
+  }
+}
+
+function deleteCategory(catIdx) {
+  if (confirm(`Remove "${data.categories[catIdx].name}" and all its items?`)) {
+    data.categories.splice(catIdx, 1);
+    save();
+    render();
+  }
+}
+
+// Double-click card to open detail sidebar
+document.addEventListener('dblclick', e => {
+  const card = e.target.closest('.item-card');
+  if (!card) return;
+  const track = card.closest('.items-track');
+  if (!track) return;
+  const catIdx = parseInt(track.id.split('-')[1]);
+  const cards = [...track.querySelectorAll('.item-card')];
+  const itemIdx = cards.indexOf(card);
+  if (itemIdx >= 0) openSidebar(catIdx, itemIdx);
+});
+
+// Right-click card to edit
+document.addEventListener('contextmenu', e => {
+  const card = e.target.closest('.item-card');
+  if (!card) return;
+  e.preventDefault();
+  const track = card.closest('.items-track');
+  if (!track) return;
+  const catIdx = parseInt(track.id.split('-')[1]);
+  const cards = [...track.querySelectorAll('.item-card')];
+  const itemIdx = cards.indexOf(card);
+  if (itemIdx >= 0) openModal(catIdx, itemIdx);
+});
+
+// Keyboard
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeSidebar();
+    closeModal();
+    closeCatModal();
+  }
+  if (e.key === 'Enter' && document.getElementById('modal').classList.contains('active')) {
+    saveItem();
+  }
+  if (e.key === 'Enter' && document.getElementById('cat-modal').classList.contains('active')) {
+    saveCategoryName();
+  }
+});
+
+// Care tips database (keyed by brand + product keywords)
+const careTips = {
+  'sunspel riviera': {
+    care: [
+      'Machine wash at 30°C inside out',
+      'Do not tumble dry. Lay flat to dry.',
+      'The mesh knit can stretch if hung on a hanger wet.',
+      'Iron on low if needed, but shouldn\'t need it.',
+      'Will shrink slightly on first wash. Buy your true size, not up.'
+    ],
+    sizing: [
+      'Slim fit through shoulders and arms, straighter through body.',
+      'Model is 6\'2", 38" chest, wears Medium.',
+      'M: 39-41" chest (99-104cm). L: 41-43" chest (104-109cm).',
+      'Midweight fabric feels more fitted than Classic T-shirt.',
+      'If between sizes: broad shoulders = match chest. Stomach = size up.'
+    ],
+    fabric: '100% Organic Cotton (mesh jersey knit)',
+    madeIn: 'England'
+  },
+  'citizens of humanity gage': {
+    care: [
+      'Machine wash cold, inside out, with like colours.',
+      'Do not bleach.',
+      'Tumble dry low.',
+      'The cashmere blend softens with each wash.',
+      'Avoid hot water as it can shrink the cashmere fibres.',
+      'Hang or fold to store (don\'t leave crumpled).'
+    ],
+    sizing: [
+      'True to size. Slim straight through the leg.',
+      'Size 34 ordered. Rise: 10.25". Inseam: 32.5". Leg opening: 15".',
+      'Relaxed through the thigh with gradual taper to ankle.',
+      'Good for an athletic build.',
+      'Model is 6\'1" and wears Size 31.'
+    ],
+    fabric: '93% Cotton, 5.5% Cashmere, 1.5% Elastane',
+    madeIn: 'USA'
+  },
+  'john smedley': {
+    care: [
+      'Hand wash or machine wash on wool/delicates cycle at 30°C max.',
+      'Use wool/cashmere detergent (not regular detergent).',
+      'Never tumble dry. Reshape and lay flat on a towel.',
+      'Do not hang on a hanger when wet (will stretch).',
+      'Store folded, not hung. Use cedar balls for moths.',
+      'Can be professionally dry cleaned.',
+      'Pilling is normal with merino. Use a fabric comb gently.'
+    ],
+    sizing: [
+      'Size L ordered. Smedley runs slightly slim (fine gauge).',
+      'If it feels snug initially, it will give slightly with wear.',
+      'Designed to be close-fitting, not oversized.'
+    ],
+    fabric: '100% Extra Fine Merino Wool (30 gauge)',
+    madeIn: 'Lea Mills, Derbyshire, England (since 1784)'
+  },
+  'reiss blackhall': {
+    care: [
+      'Check label. Most are machine washable on wool cycle at 30°C.',
+      'Lay flat to dry.',
+      'Store folded.',
+      'Good durability for the price point.'
+    ],
+    sizing: [
+      'True to size. Slim fit.',
+      'Similar sizing to John Smedley but slightly more relaxed.'
+    ],
+    fabric: 'Merino wool blend',
+    madeIn: 'Varies'
+  },
+  'common projects': {
+    care: [
+      'Use a leather protector spray before first wear.',
+      'Clean with a damp cloth and mild soap.',
+      'Use shoe trees (cedar) after every wear.',
+      'Rotate with other shoes. Don\'t wear two days in a row.',
+      'White leather will crease and patina. This is the look.',
+      'For deep cleans, use Jason Markk or similar sneaker cleaner.',
+      'Replace laces when they grey out. White laces refresh the whole shoe.'
+    ],
+    sizing: [
+      'Run large. Size down 1 from your UK size.',
+      'Italian sizing on the box (EU). UK 9 = EU 43 = CP 43.',
+      'No half sizes available.'
+    ],
+    fabric: 'Full-grain Italian leather, Margom rubber sole',
+    madeIn: 'Italy'
+  },
+  'louis vuitton': {
+    care: [
+      'Use shoe trees after every wear.',
+      'Store in the dust bags provided.',
+      'Clean with LV-recommended leather care products.',
+      'Avoid rain and puddles.',
+      'Have them resoled by a cobbler, not LV (much cheaper, same result).'
+    ],
+    sizing: [
+      'LV uses their own sizing. Try on in store.',
+      'Generally true to size but varies by model.'
+    ],
+    fabric: 'Premium leather',
+    madeIn: 'Italy / France'
+  },
+  'grenson': {
+    care: [
+      'Use shoe trees after every wear.',
+      'Clean and condition leather monthly.',
+      'Rotate with other shoes.',
+      'Can be resoled. Goodyear welted construction is built to last.'
+    ],
+    sizing: [
+      'True to UK sizing.',
+      'Generous fit. If between sizes, go down.'
+    ],
+    fabric: 'Full-grain leather, rubber sole',
+    madeIn: 'England / India (check model)'
+  }
+};
+
+function getCareTips(item) {
+  const key = (item.brand + ' ' + item.name).toLowerCase();
+  for (const [pattern, tips] of Object.entries(careTips)) {
+    if (key.includes(pattern)) return tips;
+  }
+  return null;
+}
+
+// Sidebar
+let sidebarCatIdx = -1;
+let sidebarItemIdx = -1;
+
+function openSidebar(catIdx, itemIdx) {
+  sidebarCatIdx = catIdx;
+  sidebarItemIdx = itemIdx;
+  const item = data.categories[catIdx].items[itemIdx];
+  const tips = getCareTips(item);
+  const comments = item.comments || [];
+
+  let html = '';
+
+  // Image
+  if (item.image) {
+    html += `<div class="sidebar-image"><img src="${item.image}" alt="${item.name}"></div>`;
+  } else {
+    html += `<div class="sidebar-image"></div>`;
+  }
+
+  html += `<div class="sidebar-body">`;
+
+  // Header
+  html += `<div class="sidebar-brand">${item.brand}</div>`;
+  html += `<div class="sidebar-name">${item.name}</div>`;
+  html += `<div class="sidebar-price">${item.price ? '£' + item.price : ''}</div>`;
+
+  if (item.link) {
+    html += `<a class="sidebar-link" href="${item.link}" target="_blank">View product &rarr;</a>`;
+  }
+
+  // Notes
+  if (item.notes) {
+    html += `<div class="sidebar-section">
+      <div class="sidebar-section-title">Notes</div>
+      <p>${item.notes}</p>
+    </div>`;
+  }
+
+  // Care tips
+  if (tips) {
+    if (tips.fabric || tips.madeIn) {
+      html += `<div class="sidebar-section">
+        <div class="sidebar-section-title">Details</div>
+        <ul>
+          ${tips.fabric ? `<li>Fabric: ${tips.fabric}</li>` : ''}
+          ${tips.madeIn ? `<li>Made in: ${tips.madeIn}</li>` : ''}
+        </ul>
+      </div>`;
+    }
+
+    if (tips.sizing && tips.sizing.length) {
+      html += `<div class="sidebar-section">
+        <div class="sidebar-section-title">Sizing</div>
+        <ul>${tips.sizing.map(t => `<li>${t}</li>`).join('')}</ul>
+      </div>`;
+    }
+
+    if (tips.care && tips.care.length) {
+      html += `<div class="sidebar-section">
+        <div class="sidebar-section-title">Care</div>
+        <ul>${tips.care.map(t => `<li>${t}</li>`).join('')}</ul>
+      </div>`;
+    }
+  }
+
+  // Comments
+  html += `<div class="sidebar-section">
+    <div class="sidebar-section-title">Comments</div>
+    <div id="comments-list">
+      ${comments.map((c, idx) => `
+        <div class="comment-item">
+          <span class="comment-text">${c.text}</span>
+          <span>
+            <span class="comment-date">${c.date}</span>
+            <button class="comment-delete" onclick="deleteComment(${idx})">&times;</button>
+          </span>
+        </div>
+      `).join('')}
+      ${comments.length === 0 ? '<p style="color:#444;font-size:0.75rem">No comments yet</p>' : ''}
+    </div>
+    <div class="comment-input-wrap">
+      <input type="text" id="comment-input" placeholder="Add a comment..." onkeydown="if(event.key==='Enter')addComment()">
+      <button onclick="addComment()">Add</button>
+    </div>
+  </div>`;
+
+  html += `</div>`;
+
+  document.getElementById('sidebar-content').innerHTML = html;
+  document.getElementById('sidebar').classList.add('active');
+  document.getElementById('sidebar-overlay').classList.add('active');
+}
+
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('active');
+  document.getElementById('sidebar-overlay').classList.remove('active');
+  sidebarCatIdx = -1;
+  sidebarItemIdx = -1;
+}
+
+function addComment() {
+  const input = document.getElementById('comment-input');
+  const text = input.value.trim();
+  if (!text || sidebarCatIdx < 0) return;
+
+  const item = data.categories[sidebarCatIdx].items[sidebarItemIdx];
+  if (!item.comments) item.comments = [];
+  const now = new Date();
+  item.comments.push({
+    text,
+    date: now.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+  });
+  save();
+  openSidebar(sidebarCatIdx, sidebarItemIdx);
+  setTimeout(() => document.getElementById('comment-input').focus(), 100);
+}
+
+function deleteComment(idx) {
+  const item = data.categories[sidebarCatIdx].items[sidebarItemIdx];
+  item.comments.splice(idx, 1);
+  save();
+  openSidebar(sidebarCatIdx, sidebarItemIdx);
+}
+
+// Init
+load();
+render();
+</script>
+</body>
+</html>
