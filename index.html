@@ -722,6 +722,10 @@
 </head>
 <body>
 
+<div style="position:fixed;top:16px;right:16px;z-index:10;">
+  <button class="btn" id="toggle-prices" onclick="togglePrices()" style="font-size:0.8rem;padding:6px 12px;">£</button>
+</div>
+
 <h1>Capsule</h1>
 <p class="subtitle">The Uniform</p>
 
@@ -1435,6 +1439,35 @@ function deleteComment(idx) {
   save();
   openSidebar(sidebarCatIdx, sidebarItemIdx);
 }
+
+// Price visibility
+let showPrices = localStorage.getItem('capsule-show-prices') !== 'false';
+
+function togglePrices() {
+  showPrices = !showPrices;
+  localStorage.setItem('capsule-show-prices', showPrices);
+  document.getElementById('toggle-prices').style.opacity = showPrices ? '1' : '0.4';
+  document.querySelectorAll('.item-price, .outfit-total').forEach(el => {
+    el.style.display = showPrices ? '' : 'none';
+  });
+}
+
+// Apply initial state after render
+function applyPriceVisibility() {
+  document.getElementById('toggle-prices').style.opacity = showPrices ? '1' : '0.4';
+  if (!showPrices) {
+    document.querySelectorAll('.item-price, .outfit-total').forEach(el => {
+      el.style.display = 'none';
+    });
+  }
+}
+
+// Patch render to apply price visibility after each render
+const _origRender = render;
+render = function() {
+  _origRender();
+  applyPriceVisibility();
+};
 
 // Init
 load();
